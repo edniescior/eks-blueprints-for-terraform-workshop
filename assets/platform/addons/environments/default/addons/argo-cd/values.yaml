@@ -65,7 +65,7 @@ configs:
       url: public.ecr.aws
       enableOCI: 'true'
   cm:
-    timeout.reconciliation: 5s
+    timeout.reconciliation: 180s
     application.resourceTrackingMethod: 'annotation' #use annotation for tracking required for Crossplane
     resource.exclusions: |
       - kinds:
