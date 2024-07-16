@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: addon-keda
+  namespace: argocd
+spec:
+  goTemplate: true
+  syncPolicy:
+    preserveResourcesOnDeletion: false
+  generators:
+    - clusters:
+        values:
+            addonChart: keda
+            addonChartVersion: 2.14.0
+            addonChartRepository: https://kedacore.github.io/charts
+        selector:
+            matchExpressions:
+            - key: enable_keda
+              operator: In
+              values: ['true']
+  template:
+    metadata:
+      name: "addon-{{.name}}-{{.values.addonChart}}-{{.values.addonChartVersion}}"
+      labels:
+        app_type: addon
+        addon_name: keda
+    spec:
+      project: default
+      sources:
+        - repoURL: '{{ .values.addonChartRepository}}'
+          targetRevision: '{{ .values.addonChartVersion}}'
+          chart: '{{ .values.addonChart}}'
+          helm:
+            releaseName: keda
+            parameters:
+              - name: cluster_name
+                value: '{{ .name }}'
+            values: |-
+              webhooks:
+                enabled: false              
+      destination:
+        name: '{{ .name }}'
+        namespace: keda
+      syncPolicy:
+        automated:
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
